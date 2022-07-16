@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
+from datetime import timedelta
 
 load_dotenv(find_dotenv())
 
@@ -42,7 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'api'
+    'api',
+    "knox",
 ]
 
 MIDDLEWARE = [
@@ -104,6 +106,23 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "knox.auth.TokenAuthentication",
+    ],
+}
+
+REST_KNOX = {
+    "TOKEN_TTL": timedelta(hours=72),
+    "USER_SERIALIZER": "knox.serializers.UserSerializer",
+}
+
+AUTH_USER_MODEL = "api.User"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/

@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 class Question(models.Model):
@@ -11,10 +12,7 @@ class Clues(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='question')
     content = models.TextField()
 
-class User(models.Model):
-    username = models.TextField(null=False, blank=False, unique=True, primary_key=True)
-    password = models.TextField(null=False, blank=False)
-    salt = models.TextField(null=False, blank=False)
+class User(AbstractUser):
     current_round = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='current_round')
     points = models.IntegerField(default=0)
     time = models.DateTimeField(auto_now_add=True)
