@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='User',
             fields=[
-                ('username', models.TextField(primary_key=True, serialize=False, unique=True)),
+                ('username', models.TextField(serialize=False, unique=True)),
                 ('password', models.TextField()),
                 ('salt', models.TextField()),
                 ('points', models.IntegerField(default=0)),

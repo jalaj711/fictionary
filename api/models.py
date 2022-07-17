@@ -13,15 +13,10 @@ class Clues(models.Model):
     content = models.TextField()
 
 class User(AbstractUser):
-    current_round = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='current_round')
+    current_round = models.IntegerField(default=1)
     points = models.IntegerField(default=0)
     time = models.DateTimeField(auto_now_add=True)
 
 class Meta(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-
-class AccessTokens(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
-    token = models.TextField(null=False, blank=False)
-    expires_on = models.DateTimeField(null=False, blank=False)

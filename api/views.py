@@ -1,7 +1,7 @@
 import json
 from django.db.utils import IntegrityError
 from .serializers import *
-from .models import User, Question, Clues, AccessTokens
+from .models import User, Question, Clues
 from rest_framework.decorators import permission_classes, APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import generics, status
@@ -9,6 +9,7 @@ from knox.models import AuthToken
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 # Create your views here.
+
 
 @permission_classes(
     [
@@ -23,11 +24,13 @@ class register(generics.GenericAPIView):
             request.data.get("username") != ""
             and request.data.get("password") != ""
         ):
-            data = request.data.copy()
-            data['current_round'] = Question.objects.get(round=0)
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = serializer.save()
+            try:
+                user = User.objects.create_user(
+                    username=request.data.get("username"),
+                    password=request.data.get("password")
+                )
+            except:
+                return Response("Username already used!!", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             return Response(
                 {
                     "token": AuthToken.objects.create(user)[1],
@@ -54,7 +57,7 @@ class login(generics.GenericAPIView):
         if user is not None:
             return Response(
                 {
-                    "user": UserSerializer(
+                    "user": LoginSerializer(
                         user, context=self.get_serializer_context()
                     ).data,
                     "token": AuthToken.objects.create(user)[1],
