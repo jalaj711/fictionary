@@ -6,7 +6,7 @@ class Question(models.Model):
     text = models.TextField()
     round = models.IntegerField(primary_key=True)
     answer = models.CharField(max_length=100)
-    media = models.FileField(upload_to="media/questions", blank=True, null=True)
+    media = models.FileField(upload_to="questions/", blank=True, null=True)
 
 class Clues(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='question')
