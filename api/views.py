@@ -1,10 +1,9 @@
 from datetime import datetime
-import json
 from django.db.utils import IntegrityError
 from django.http import JsonResponse
 from .serializers import *
 from .models import User, Question, Clues
-from rest_framework.decorators import permission_classes, APIView
+from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import generics, status
 from knox.models import AuthToken
