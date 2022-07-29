@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.utils import IntegrityError
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect
 from .serializers import *
 from .models import User, Question, Clues
 from rest_framework.decorators import permission_classes
@@ -9,8 +10,27 @@ from rest_framework import generics, status
 from knox.models import AuthToken
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
+"""
+import requests
 # Create your views here.
 
+from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from allauth.socialaccount.models import SocialApp
+
+@permission_classes([AllowAny])
+class GithubLogin(generics.GenericAPIView):
+    def get(self, request):
+        gh = SocialApp.objects.get(provider='github')
+        return redirect(f'https://github.com/login/oauth/authorize?client_id={gh.client_id}&scope=read:user,user:email')
+"""
+@permission_classes([ AllowAny ])
+def social_generate_token(request):
+    if request.user.is_authenticated:
+        response = redirect('/')
+        response.set_cookie('token', AuthToken.objects.create(request.user)[1], expires=datetime.now() + timedelta(days=3))
+        return response
+    return HttpResponse('Not authenticated', status=status.HTTP_401_UNAUTHORIZED)
 
 @permission_classes(
     [
@@ -31,7 +51,7 @@ class register(generics.GenericAPIView):
                     password=request.data.get("password")
                 )
             except:
-                return Response("Username already used!!", status=status.HTTP_400_INTERNAL_SERVER_ERROR)
+                return Response("Username already used!!", status=status.HTTP_400_BAD_REQUEST)
             return Response(
                 {
                     "token": AuthToken.objects.create(user)[1],
@@ -148,7 +168,7 @@ class answer(generics.GenericAPIView):
 class leaderboard(generics.GenericAPIView):
     def get(self, request):
         #try:
-        leaderboard = list(User.objects.filter().order_by('-points'))
+        leaderboard = list(User.objects.filter().order_by('-points', 'time'))
 
         # Tie breaker in case of same points
         for i in range(len(leaderboard)):

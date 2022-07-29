@@ -27,5 +27,6 @@ urlpatterns = [
     path('question/', csrf_exempt(available_when_live(views.question.as_view())), name='question'),
     path('answer/', csrf_exempt(available_when_live(views.answer.as_view())), name='answer'),
     path('clue/', csrf_exempt(available_when_live(views.clue.as_view())), name='clue'),
-    path('leaderboard/', csrf_exempt(views.leaderboard.as_view()), name='leaderboard')
+    path('leaderboard/', csrf_exempt(views.leaderboard.as_view()), name='leaderboard'),
+    path('accounts/generate-token/', csrf_exempt(views.social_generate_token), name='social_token_generator')
 ]
