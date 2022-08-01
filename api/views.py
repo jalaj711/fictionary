@@ -1,7 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.db.utils import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
+from django.utils import timezone
 from .serializers import *
 from .models import User, Question, Clues
 from rest_framework.decorators import permission_classes
@@ -28,7 +29,7 @@ class GithubLogin(generics.GenericAPIView):
 def social_generate_token(request):
     if request.user.is_authenticated:
         response = redirect('/')
-        response.set_cookie('token', AuthToken.objects.create(request.user)[1], expires=datetime.now() + timedelta(days=3))
+        response.set_cookie('token', AuthToken.objects.create(request.user)[1], expires=timezone.now() + timedelta(days=3))
         return response
     return HttpResponse('Not authenticated', status=status.HTTP_401_UNAUTHORIZED)
 
@@ -103,6 +104,14 @@ class question(generics.GenericAPIView):
                 media = question.media.url
             except ValueError:
                 media = ''
+
+            # To make sure that the wait_time is not reset everytime a
+            # user fetches the question, for example when refreshing the page
+            if request.user.calc_wait_time_from is None:
+                request.user.calc_wait_time_from = timezone.now()
+                print(request.user.calc_wait_time_from)
+                request.user.save()
+
             return JsonResponse({
                 'text': question.text,
                 'round': question.round,
@@ -121,15 +130,40 @@ class clue(generics.GenericAPIView):
         cround = request.user.current_round
         try:
             question = Question.objects.get(round=cround)
-            clues = Clues.objects.filter(question=question)
-            clues = [clue.content for clue in clues]
-            return JsonResponse({
-                'clues': clues,
-            })
         except IntegrityError:
             return JsonResponse({
                 'message': 'Question not found'
             }, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            clue = Clues.objects.get(question=question, clue_no=request.user.current_clue+1)
+        except IntegrityError:
+            return JsonResponse({
+                'message': 'Clue not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Make sure that enough time has passed for the user
+        diff = timezone.now() - request.user.calc_wait_time_from
+        print(timezone.now(), request.user.calc_wait_time_from, diff)
+        if diff > timedelta(minutes=clue.wait_time_in_minutes):
+
+            # Get the clues
+            _clues = Clues.objects.filter(question=question, clue_no__lte=request.user.current_clue+1)
+            clues = [clue.content for clue in _clues]
+
+            # So that the user can access the next clue
+            request.user.current_clue += 1
+            request.user.calc_wait_time_from = timezone.now()
+            request.user.save()
+
+            return JsonResponse({
+                'clues': clues,
+            })
+        else:
+            return JsonResponse({
+                'message': f'Wait for {clue.wait_time_in_minutes * 60 - diff.seconds} more second(s) to view your clue.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
 
 @permission_classes(
     [IsAuthenticated]
@@ -146,9 +180,16 @@ class answer(generics.GenericAPIView):
         try:
             question = Question.objects.get(round=cround)
             if question.answer == answer:
+
+                # Increment points
                 request.user.current_round = cround + 1
-                request.user.points += 10
-                request.user.time = datetime.now()
+                request.user.points += question.points
+                request.user.time = timezone.now()
+
+                # Reset clue fields for next question
+                request.user.current_clue = 0
+                request.user.calc_wait_time_from = None
+
                 request.user.save()
                 return JsonResponse({
                     'success': True

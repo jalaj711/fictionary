@@ -9,7 +9,6 @@ from . import views
 def _available_when_live(view_function, *args, **kwargs):
     meta = Meta.objects.filter()[0]
     now = timezone.now()
-    print(now, meta.start_time, meta.end_time)
     if now > meta.start_time and now < meta.end_time:
         return view_function(*args, **kwargs)
     return JsonResponse({
