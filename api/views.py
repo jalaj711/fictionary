@@ -28,11 +28,11 @@ def sociallogin_get_token(request):
     if request.user.is_authenticated:
         token = AuthToken.objects.create(request.user)[1]
         res = JsonResponse({
-            token: token
+            'token': token
         })
 
         # To make sure that the user can get the token only once per social media login
-        res.set_cookie('sessionid', '')
+        # res.set_cookie('sessionid', '')
         return res
     return HttpResponse('Not authenticated', status=status.HTTP_401_UNAUTHORIZED)
 
