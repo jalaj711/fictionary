@@ -28,8 +28,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get(
     'SECRET_KEY') or 'django-insecure-sam*qmo6adkiw4(u11c7wi2hfiiir(#mrlvofn%wxjtar(rm(4'
 
+ENV = os.environ.get('ENV', 'DEVELOPMENT')
+IS_DEVELOPMENT = ENV == 'DEVELOPMENT'
+DEV_CRA_SERVER = 'http://127.0.0.1:3000'
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = IS_DEVELOPMENT
 
 ALLOWED_HOSTS = ['*']
 
@@ -50,9 +54,11 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
+    'corsheaders'
 ]
 REST_AUTH_TOKEN_MODEL = None
-LOGIN_REDIRECT_URL = '/api/accounts/generate-token/'
+LOGIN_REDIRECT_URL = DEV_CRA_SERVER + \
+    '/signin?fetch=true' if IS_DEVELOPMENT else '/signin?fetch=true'
 SOCIALACCOUNT_PROVIDERS = {
     'github': {
         'SCOPE': [
@@ -67,12 +73,16 @@ SITE_ID = 1
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'api.middlewares.token_cookie_to_header_middleware',
+    # 'api.middlewares.token_cookie_to_header_middleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOWED_ORIGINS = [DEV_CRA_SERVER]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'fictionary.urls'
 
@@ -165,3 +175,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SESSION_COOKIE_SAMESITE = 'Lax'
