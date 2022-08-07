@@ -1,0 +1,7 @@
+django
+django-allauth
+django-cors-headers
+django-rest-knox
+djangorestframework
+python-dotenv
+gunicorn
