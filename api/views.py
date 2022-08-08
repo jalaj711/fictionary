@@ -24,7 +24,6 @@ from django.contrib.auth import authenticate
 
 @permission_classes([ AllowAny ])
 def sociallogin_get_token(request):
-    print(request.COOKIES)
     if request.user.is_authenticated:
         token = AuthToken.objects.create(request.user)[1]
         res = JsonResponse({

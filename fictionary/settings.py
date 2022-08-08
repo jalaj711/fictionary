@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
+    'allauth.socialaccount.providers.google',
     'corsheaders'
 ]
 REST_AUTH_TOKEN_MODEL = None
@@ -67,8 +68,19 @@ SOCIALACCOUNT_PROVIDERS = {
             'read:user',
             'user:email'
         ],
+    },
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
     }
 }
+
+SOCIALACCOUNT_QUERY_EMAIL=True
 
 SITE_ID = 1
 
