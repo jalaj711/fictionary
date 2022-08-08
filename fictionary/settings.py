@@ -34,8 +34,7 @@ DEV_CRA_SERVER = 'http://127.0.0.1:3000'
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
+DEBUG =True
 ALLOWED_HOSTS = ['*']
 
 
@@ -50,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'frontend',
     'api',
     'knox',
     'allauth',
