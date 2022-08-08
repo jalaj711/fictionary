@@ -32,6 +32,7 @@ ENV = os.environ.get('ENV', 'DEVELOPMENT')
 IS_DEVELOPMENT = ENV == 'DEVELOPMENT'
 DEV_CRA_SERVER = 'http://127.0.0.1:3000'
 
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = IS_DEVELOPMENT
 
@@ -82,7 +83,6 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [DEV_CRA_SERVER]
-CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'fictionary.urls'
 
@@ -114,6 +114,11 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+if not IS_DEVELOPMENT:
+    import dj_database_url
+    db_from_env = dj_database_url.config(conn_max_age=600)
+    DATABASES['default'].update(db_from_env)
 
 
 # Password validation
