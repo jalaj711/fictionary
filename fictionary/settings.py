@@ -34,7 +34,7 @@ DEV_CRA_SERVER = 'http://127.0.0.1:3000'
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = IS_DEVELOPMENT
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
