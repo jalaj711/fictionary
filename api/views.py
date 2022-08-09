@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate
 
 
-
 # @permission_classes([ AllowAny ])
 # def social_generate_token(request):
 #     if request.user.is_authenticated:
@@ -22,7 +21,7 @@ from django.contrib.auth import authenticate
 #         return response
 #     return HttpResponse('Not authenticated', status=status.HTTP_401_UNAUTHORIZED)
 
-@permission_classes([ AllowAny ])
+@permission_classes([AllowAny])
 def sociallogin_get_token(request):
     if request.user.is_authenticated:
         token = AuthToken.objects.create(request.user)[1]
@@ -34,6 +33,7 @@ def sociallogin_get_token(request):
         # res.set_cookie('sessionid', '')
         return res
     return HttpResponse('Not authenticated', status=status.HTTP_401_UNAUTHORIZED)
+
 
 @permission_classes(
     [
@@ -124,6 +124,7 @@ class question(generics.GenericAPIView):
                 'message': 'Question not found'
             }, status=status.HTTP_404_NOT_FOUND)
 
+
 @permission_classes(
     [IsAuthenticated]
 )
@@ -139,20 +140,22 @@ class clue(generics.GenericAPIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            clue = Clues.objects.get(question=question, clue_no=request.user.current_clue+1)
+            clue = Clues.objects.get(
+                question=question, clue_no=request.user.current_clue+1)
         except IntegrityError:
             return JsonResponse({
                 'message': 'Clue not found',
                 'success': False
             }, status=status.HTTP_404_NOT_FOUND)
-        
+
         # Make sure that enough time has passed for the user
         diff = timezone.now() - request.user.calc_wait_time_from
         print(timezone.now(), request.user.calc_wait_time_from, diff)
         if diff > timedelta(minutes=clue.wait_time_in_minutes):
 
             # Get the clues
-            _clues = Clues.objects.filter(question=question, clue_no__lte=request.user.current_clue+1)
+            _clues = Clues.objects.filter(
+                question=question, clue_no__lte=request.user.current_clue+1)
             clues = [clue.content for clue in _clues]
 
             # So that the user can access the next clue
@@ -171,6 +174,7 @@ class clue(generics.GenericAPIView):
                 'success': False
             })
 
+
 @permission_classes(
     [IsAuthenticated]
 )
@@ -186,13 +190,14 @@ class checkClueAvailability(generics.GenericAPIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            clue = Clues.objects.get(question=question, clue_no=request.user.current_clue+1)
+            clue = Clues.objects.get(
+                question=question, clue_no=request.user.current_clue+1)
         except IntegrityError:
             return JsonResponse({
                 'message': 'Clue not found',
                 'success': False
             }, status=status.HTTP_404_NOT_FOUND)
-        
+
         # Make sure that enough time has passed for the user
         diff = timezone.now() - request.user.calc_wait_time_from
         print(timezone.now(), request.user.calc_wait_time_from, diff)
@@ -206,7 +211,8 @@ class checkClueAvailability(generics.GenericAPIView):
                 'available': False,
                 'timeleft': clue.wait_time_in_minutes * 60 - diff.seconds,
                 'success': True
-            })        
+            })
+
 
 @permission_classes(
     [IsAuthenticated]
@@ -217,7 +223,7 @@ class answer(generics.GenericAPIView):
 
         if 'answer' not in request.data.keys():
             return JsonResponse({'message': 'Empty answer not accepted'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         answer = request.data.get('answer').lower().strip()
 
         try:
@@ -246,12 +252,13 @@ class answer(generics.GenericAPIView):
                 'message': 'Question not found'
             }, status=status.HTTP_404_NOT_FOUND)
 
+
 @permission_classes(
     [IsAuthenticated]
 )
 class leaderboard(generics.GenericAPIView):
     def get(self, request):
-        #try:
+        # try:
         leaderboard = list(User.objects.filter().order_by('-points', 'time'))
 
         # Tie breaker in case of same points
@@ -260,14 +267,14 @@ class leaderboard(generics.GenericAPIView):
                 if leaderboard[i].points == leaderboard[j].points:
                     if leaderboard[i].time > leaderboard[j].time:
                         leaderboard[i], leaderboard[j] = leaderboard[j], leaderboard[i]
-        
-        leaderboard = [{'name': user.username, 'points': user.points} for user in leaderboard]
+
+        leaderboard = [{'username': user.username, 'name': user.first_name +
+                        ' ' + user.last_name, 'points': user.points} for user in leaderboard]
 
         return JsonResponse({
             'leaderboard': leaderboard
-            })
+        })
         # except:
         #     return JsonResponse({
         #         'message': 'Server failed to process the request'
         #     }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
