@@ -134,14 +134,16 @@ class clue(generics.GenericAPIView):
             question = Question.objects.get(round=cround)
         except IntegrityError:
             return JsonResponse({
-                'message': 'Question not found'
+                'message': 'Question not found',
+                'success': False
             }, status=status.HTTP_404_NOT_FOUND)
 
         try:
             clue = Clues.objects.get(question=question, clue_no=request.user.current_clue+1)
         except IntegrityError:
             return JsonResponse({
-                'message': 'Clue not found'
+                'message': 'Clue not found',
+                'success': False
             }, status=status.HTTP_404_NOT_FOUND)
         
         # Make sure that enough time has passed for the user
@@ -160,12 +162,51 @@ class clue(generics.GenericAPIView):
 
             return JsonResponse({
                 'clues': clues,
+                'success': True
             })
         else:
             return JsonResponse({
-                'message': f'Wait for {clue.wait_time_in_minutes * 60 - diff.seconds} more second(s) to view your clue.'
-            }, status=status.HTTP_403_FORBIDDEN)
+                'message': f'Wait for {clue.wait_time_in_minutes * 60 - diff.seconds} more second(s) to view your clue.',
+                'timeleft': clue.wait_time_in_minutes * 60 - diff.seconds,
+                'success': False
+            })
+
+@permission_classes(
+    [IsAuthenticated]
+)
+class checkClueAvailability(generics.GenericAPIView):
+    def get(self, request):
+        cround = request.user.current_round
+        try:
+            question = Question.objects.get(round=cround)
+        except IntegrityError:
+            return JsonResponse({
+                'message': 'Question not found',
+                'success': False
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            clue = Clues.objects.get(question=question, clue_no=request.user.current_clue+1)
+        except IntegrityError:
+            return JsonResponse({
+                'message': 'Clue not found',
+                'success': False
+            }, status=status.HTTP_404_NOT_FOUND)
         
+        # Make sure that enough time has passed for the user
+        diff = timezone.now() - request.user.calc_wait_time_from
+        print(timezone.now(), request.user.calc_wait_time_from, diff)
+        if diff > timedelta(minutes=clue.wait_time_in_minutes):
+            return JsonResponse({
+                'available': True,
+                'success': True
+            })
+        else:
+            return JsonResponse({
+                'available': False,
+                'timeleft': clue.wait_time_in_minutes * 60 - diff.seconds,
+                'success': True
+            })        
 
 @permission_classes(
     [IsAuthenticated]

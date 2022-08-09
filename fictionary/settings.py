@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 REST_AUTH_TOKEN_MODEL = None
 LOGIN_REDIRECT_URL = DEV_CRA_SERVER + \
     '/signin?fetch=true' if IS_DEVELOPMENT else '/signin?fetch=true'
+#LOGIN_REDIRECT_URL = '/signin?fetch=true'
 SOCIALACCOUNT_PROVIDERS = {
     'github': {
         'SCOPE': [
@@ -97,6 +98,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [DEV_CRA_SERVER]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'fictionary.urls'
 
