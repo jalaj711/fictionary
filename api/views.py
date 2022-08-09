@@ -146,9 +146,12 @@ class clue(generics.GenericAPIView):
         
         if request.user.current_clue >= Clues.objects.filter(question=question).count():
             # Get the clues
-            _clues = Clues.objects.filter(
-                question=question, clue_no__lte=request.user.current_clue+1)
-            clues = [clue.content for clue in _clues]
+            try:
+                _clues = Clues.objects.filter(
+                    question=question, clue_no__lte=request.user.current_clue+1)
+                clues = [clue.content for clue in _clues]
+            except Clues.DoesNotExist:
+                clues = []
 
             return JsonResponse({
                 'clues': clues,
@@ -211,7 +214,7 @@ class checkClueAvailability(generics.GenericAPIView):
         try:
             clue = Clues.objects.get(
                 question=question, clue_no=request.user.current_clue+1)
-        except Model.DoesNotExist:
+        except Clues.DoesNotExist:
             return JsonResponse({
                 'message': 'Clue not found',
                 'success': False
