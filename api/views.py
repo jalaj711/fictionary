@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.db.utils import IntegrityError
+from django.db.models import Model
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -101,6 +102,10 @@ class question(generics.GenericAPIView):
     def get(self, request):
         cround = request.user.current_round
         try:
+            if cround > Question.objects.filter().count():
+                return JsonResponse({
+                    'message': 'Game is over'
+                })
             question = Question.objects.get(round=cround)
             try:
                 media = question.media.url
@@ -119,7 +124,7 @@ class question(generics.GenericAPIView):
                 'round': question.round,
                 'media': media
             })
-        except IntegrityError:
+        except Model.DoesNotExist:
             return JsonResponse({
                 'message': 'Question not found'
             }, status=status.HTTP_404_NOT_FOUND)
@@ -133,16 +138,27 @@ class clue(generics.GenericAPIView):
         cround = request.user.current_round
         try:
             question = Question.objects.get(round=cround)
-        except IntegrityError:
+        except Model.DoesNotExist:
             return JsonResponse({
                 'message': 'Question not found',
                 'success': False
             }, status=status.HTTP_404_NOT_FOUND)
+        
+        if request.user.current_clue >= Clues.objects.filter(question=question).count():
+            # Get the clues
+            _clues = Clues.objects.filter(
+                question=question, clue_no__lte=request.user.current_clue+1)
+            clues = [clue.content for clue in _clues]
+
+            return JsonResponse({
+                'clues': clues,
+                'success': True
+            })
 
         try:
             clue = Clues.objects.get(
                 question=question, clue_no=request.user.current_clue+1)
-        except IntegrityError:
+        except Model.DoesNotExist:
             return JsonResponse({
                 'message': 'Clue not found',
                 'success': False
@@ -154,9 +170,12 @@ class clue(generics.GenericAPIView):
         if diff > timedelta(minutes=clue.wait_time_in_minutes):
 
             # Get the clues
-            _clues = Clues.objects.filter(
+            try:
+                _clues = Clues.objects.filter(
                 question=question, clue_no__lte=request.user.current_clue+1)
-            clues = [clue.content for clue in _clues]
+                clues = [clue.content for clue in _clues]
+            except:
+                clues = []
 
             # So that the user can access the next clue
             request.user.current_clue += 1
@@ -183,7 +202,7 @@ class checkClueAvailability(generics.GenericAPIView):
         cround = request.user.current_round
         try:
             question = Question.objects.get(round=cround)
-        except IntegrityError:
+        except Model.DoesNotExist:
             return JsonResponse({
                 'message': 'Question not found',
                 'success': False
@@ -192,7 +211,7 @@ class checkClueAvailability(generics.GenericAPIView):
         try:
             clue = Clues.objects.get(
                 question=question, clue_no=request.user.current_clue+1)
-        except IntegrityError:
+        except Model.DoesNotExist:
             return JsonResponse({
                 'message': 'Clue not found',
                 'success': False
@@ -247,7 +266,7 @@ class answer(generics.GenericAPIView):
             return JsonResponse({
                 'success': False
             })
-        except IntegrityError:
+        except Model.DoesNotExist:
             return JsonResponse({
                 'message': 'Question not found'
             }, status=status.HTTP_404_NOT_FOUND)
