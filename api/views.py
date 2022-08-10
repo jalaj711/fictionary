@@ -1,11 +1,9 @@
 from datetime import timedelta
-from django.db.utils import IntegrityError
 from django.db.models import Model
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect
 from django.utils import timezone
 from .serializers import *
-from .models import User, Question, Clues
+from .models import User, Question
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import generics, status
@@ -138,61 +136,24 @@ class clue(generics.GenericAPIView):
         cround = request.user.current_round
         try:
             question = Question.objects.get(round=cround)
-        except Model.DoesNotExist:
+        except Question.DoesNotExist:
             return JsonResponse({
                 'message': 'Question not found',
-                'success': False
-            }, status=status.HTTP_404_NOT_FOUND)
-        
-        if request.user.current_clue >= Clues.objects.filter(question=question).count():
-            # Get the clues
-            try:
-                _clues = Clues.objects.filter(
-                    question=question, clue_no__lte=request.user.current_clue+1)
-                clues = [clue.content for clue in _clues]
-            except Clues.DoesNotExist:
-                clues = []
-
-            return JsonResponse({
-                'clues': clues,
-                'success': True
-            })
-
-        try:
-            clue = Clues.objects.get(
-                question=question, clue_no=request.user.current_clue+1)
-        except Model.DoesNotExist:
-            return JsonResponse({
-                'message': 'Clue not found',
                 'success': False
             }, status=status.HTTP_404_NOT_FOUND)
 
         # Make sure that enough time has passed for the user
         diff = timezone.now() - request.user.calc_wait_time_from
         print(timezone.now(), request.user.calc_wait_time_from, diff)
-        if diff > timedelta(minutes=clue.wait_time_in_minutes):
-
-            # Get the clues
-            try:
-                _clues = Clues.objects.filter(
-                question=question, clue_no__lte=request.user.current_clue+1)
-                clues = [clue.content for clue in _clues]
-            except:
-                clues = []
-
-            # So that the user can access the next clue
-            request.user.current_clue += 1
-            request.user.calc_wait_time_from = timezone.now()
-            request.user.save()
-
+        if diff > timedelta(minutes=question.clue_wait_time):
             return JsonResponse({
-                'clues': clues,
+                'clue': question.clue,
                 'success': True
             })
         else:
             return JsonResponse({
-                'message': f'Wait for {clue.wait_time_in_minutes * 60 - diff.seconds} more second(s) to view your clue.',
-                'timeleft': clue.wait_time_in_minutes * 60 - diff.seconds,
+                'message': f'Wait for {question.clue_wait_time * 60 - diff.seconds} more second(s) to view your clue.',
+                'timeleft': question.clue_wait_time * 60 - diff.seconds,
                 'success': False
             })
 
@@ -205,25 +166,16 @@ class checkClueAvailability(generics.GenericAPIView):
         cround = request.user.current_round
         try:
             question = Question.objects.get(round=cround)
-        except Model.DoesNotExist:
+        except Question.DoesNotExist:
             return JsonResponse({
                 'message': 'Question not found',
-                'success': False
-            }, status=status.HTTP_404_NOT_FOUND)
-
-        try:
-            clue = Clues.objects.get(
-                question=question, clue_no=request.user.current_clue+1)
-        except Clues.DoesNotExist:
-            return JsonResponse({
-                'message': 'Clue not found',
                 'success': False
             }, status=status.HTTP_404_NOT_FOUND)
 
         # Make sure that enough time has passed for the user
         diff = timezone.now() - request.user.calc_wait_time_from
         print(timezone.now(), request.user.calc_wait_time_from, diff)
-        if diff > timedelta(minutes=clue.wait_time_in_minutes):
+        if diff > timedelta(minutes=question.clue_wait_time):
             return JsonResponse({
                 'available': True,
                 'success': True
@@ -231,10 +183,9 @@ class checkClueAvailability(generics.GenericAPIView):
         else:
             return JsonResponse({
                 'available': False,
-                'timeleft': clue.wait_time_in_minutes * 60 - diff.seconds,
+                'timeleft': question.clue_wait_time * 60 - diff.seconds,
                 'success': True
             })
-
 
 @permission_classes(
     [IsAuthenticated]
@@ -256,9 +207,6 @@ class answer(generics.GenericAPIView):
                 request.user.current_round = cround + 1
                 request.user.points += question.points
                 request.user.time = timezone.now()
-
-                # Reset clue fields for next question
-                request.user.current_clue = 0
                 request.user.calc_wait_time_from = None
 
                 request.user.save()
