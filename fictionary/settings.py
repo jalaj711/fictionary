@@ -30,7 +30,7 @@ SECRET_KEY = os.environ.get(
 
 ENV = os.environ.get('ENV', 'DEVELOPMENT')
 IS_DEVELOPMENT = ENV == 'DEVELOPMENT'
-DEV_CRA_SERVER = 'http://127.0.0.1:3000'
+FRONTEND_HOST = os.environ.get('FRONTEND_HOST', 'http://127.0.0.1:3000')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'frontend',
     'api',
     'knox',
     'allauth',
@@ -60,8 +59,7 @@ INSTALLED_APPS = [
     'corsheaders'
 ]
 REST_AUTH_TOKEN_MODEL = None
-LOGIN_REDIRECT_URL = DEV_CRA_SERVER + \
-    '/signin?fetch=true' if IS_DEVELOPMENT else '/signin?fetch=true'
+LOGIN_REDIRECT_URL = FRONTEND_HOST + '/signin?fetch=true'
 #LOGIN_REDIRECT_URL = '/signin?fetch=true'
 SOCIALACCOUNT_PROVIDERS = {
     'github': {
@@ -97,7 +95,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [DEV_CRA_SERVER]
+CORS_ALLOWED_ORIGINS = [FRONTEND_HOST]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'fictionary.urls'
