@@ -114,7 +114,6 @@ class question(generics.GenericAPIView):
             # user fetches the question, for example when refreshing the page
             if request.user.calc_wait_time_from is None:
                 request.user.calc_wait_time_from = timezone.now()
-                print(request.user.calc_wait_time_from)
                 request.user.save()
 
             return JsonResponse({
