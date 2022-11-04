@@ -10,6 +10,8 @@ from rest_framework import generics, status
 from knox.models import AuthToken
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
+from allauth.socialaccount.models import SocialAccount
+import json
 
 
 # @permission_classes([ AllowAny ])
@@ -187,6 +189,7 @@ class checkClueAvailability(generics.GenericAPIView):
                 'success': True
             })
 
+
 @permission_classes(
     [IsAuthenticated]
 )
@@ -232,17 +235,20 @@ class leaderboard(generics.GenericAPIView):
         leaderboard = list(User.objects.filter().order_by('-points', 'time'))
 
         # Tie breaker in case of same points
-        for i in range(len(leaderboard)):
-            for j in range(i, len(leaderboard)):
-                if leaderboard[i].points == leaderboard[j].points:
-                    if leaderboard[i].time > leaderboard[j].time:
-                        leaderboard[i], leaderboard[j] = leaderboard[j], leaderboard[i]
-
-        leaderboard = [{'username': user.username, 'name': user.first_name +
-                        ' ' + user.last_name, 'points': user.points} for user in leaderboard]
+        # for i in range(len(leaderboard)):
+        #     for j in range(i, len(leaderboard)):
+        #         if leaderboard[i].points == leaderboard[j].points:
+        #             if leaderboard[i].time > leaderboard[j].time:
+        #                 leaderboard[i], leaderboard[j] = leaderboard[j], leaderboard[i]
+        board = []
+        for user in leaderboard:
+            if user.email:
+                social_model = SocialAccount.objects.get(user=user)
+                board.append({'username': user.username, 'name': user.first_name +
+                              ' ' + user.last_name, 'points': user.points, "avatar": social_model.extra_data['picture']})
 
         return JsonResponse({
-            'leaderboard': leaderboard
+            'leaderboard': board
         })
         # except:
         #     return JsonResponse({
