@@ -11,7 +11,7 @@ from knox.models import AuthToken
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from allauth.socialaccount.models import SocialAccount
-import json
+import re
 
 
 # @permission_classes([ AllowAny ])
@@ -216,6 +216,7 @@ class answer(generics.GenericAPIView):
             return JsonResponse({'message': 'Empty answer not accepted'}, status=status.HTTP_400_BAD_REQUEST)
 
         answer = request.data.get('answer').lower().strip()
+        answer = re.sub(' +', ' ', answer)
 
         try:
             question = Question.objects.get(round=cround)
