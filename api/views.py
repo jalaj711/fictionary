@@ -242,10 +242,12 @@ class leaderboard(generics.GenericAPIView):
         #                 leaderboard[i], leaderboard[j] = leaderboard[j], leaderboard[i]
         board = []
         for user in leaderboard:
-            if user.email:
+            try:
                 social_model = SocialAccount.objects.get(user=user)
                 board.append({'username': user.username, 'name': user.first_name +
-                              ' ' + user.last_name, 'points': user.points, "avatar": social_model.extra_data['picture']})
+                                ' ' + user.last_name, 'points': user.points, "avatar": social_model.extra_data['picture']})
+            except:
+                continue
 
         return JsonResponse({
             'leaderboard': board
