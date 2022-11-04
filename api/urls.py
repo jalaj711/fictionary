@@ -23,6 +23,7 @@ def available_when_live(view_function):
 
 
 urlpatterns = [
+    path('check-game-live/', csrf_exempt(views.check_game_live), name='isGameLive'),
     path('login/', csrf_exempt(views.login.as_view()), name='login'),
     path('register/', csrf_exempt(views.register.as_view()), name='register'),
     path('question/', csrf_exempt(available_when_live(views.question.as_view())), name='question'),

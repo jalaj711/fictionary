@@ -3,7 +3,7 @@ from django.db.models import Model
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from .serializers import *
-from .models import User, Question
+from .models import User, Question, Meta
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import generics, status
@@ -34,6 +34,21 @@ def sociallogin_get_token(request):
         # res.set_cookie('sessionid', '')
         return res
     return HttpResponse('Not authenticated', status=status.HTTP_401_UNAUTHORIZED)
+
+
+@permission_classes([AllowAny])
+def check_game_live(request):
+    meta = Meta.objects.filter()[0]
+    now = timezone.now()
+    if now > meta.start_time and now < meta.end_time:
+        return JsonResponse({
+            'game_live': True,
+            'date': meta.end_time
+        })
+    return JsonResponse({
+        'game_live': False,
+        'date': meta.start_time
+    })
 
 
 @permission_classes(
@@ -245,7 +260,7 @@ class leaderboard(generics.GenericAPIView):
             try:
                 social_model = SocialAccount.objects.get(user=user)
                 board.append({'username': user.username, 'name': user.first_name +
-                                ' ' + user.last_name, 'points': user.points, "avatar": social_model.extra_data['picture']})
+                              ' ' + user.last_name, 'points': user.points, "avatar": social_model.extra_data['picture']})
             except:
                 continue
 
