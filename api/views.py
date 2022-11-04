@@ -102,6 +102,7 @@ class question(generics.GenericAPIView):
         try:
             if cround > Question.objects.filter().count():
                 return JsonResponse({
+                    'gameOver': True,
                     'message': 'Game is over'
                 })
             question = Question.objects.get(round=cround)
