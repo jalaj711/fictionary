@@ -51,6 +51,38 @@ def check_game_live(request):
     })
 
 
+
+@permission_classes(
+    [AllowAny]
+)
+def leaderboard(request):
+    # try:
+    leaderboard = list(User.objects.filter().order_by('-points', 'time'))
+
+    # Tie breaker in case of same points
+    # for i in range(len(leaderboard)):
+    #     for j in range(i, len(leaderboard)):
+    #         if leaderboard[i].points == leaderboard[j].points:
+    #             if leaderboard[i].time > leaderboard[j].time:
+    #                 leaderboard[i], leaderboard[j] = leaderboard[j], leaderboard[i]
+    board = []
+    for user in leaderboard:
+        try:
+            social_model = SocialAccount.objects.get(user=user)
+            board.append({'username': user.username, 'name': user.first_name +
+                            ' ' + user.last_name, 'points': user.points, "avatar": social_model.extra_data['picture']})
+        except:
+            continue
+
+    return JsonResponse({
+        'leaderboard': board
+    })
+    # except:
+    #     return JsonResponse({
+    #         'message': 'Server failed to process the request'
+    #     }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @permission_classes(
     [
         AllowAny,
@@ -241,34 +273,3 @@ class answer(generics.GenericAPIView):
                 'message': 'Question not found'
             }, status=status.HTTP_404_NOT_FOUND)
 
-
-@permission_classes(
-    [IsAuthenticated]
-)
-class leaderboard(generics.GenericAPIView):
-    def get(self, request):
-        # try:
-        leaderboard = list(User.objects.filter().order_by('-points', 'time'))
-
-        # Tie breaker in case of same points
-        # for i in range(len(leaderboard)):
-        #     for j in range(i, len(leaderboard)):
-        #         if leaderboard[i].points == leaderboard[j].points:
-        #             if leaderboard[i].time > leaderboard[j].time:
-        #                 leaderboard[i], leaderboard[j] = leaderboard[j], leaderboard[i]
-        board = []
-        for user in leaderboard:
-            try:
-                social_model = SocialAccount.objects.get(user=user)
-                board.append({'username': user.username, 'name': user.first_name +
-                              ' ' + user.last_name, 'points': user.points, "avatar": social_model.extra_data['picture']})
-            except:
-                continue
-
-        return JsonResponse({
-            'leaderboard': board
-        })
-        # except:
-        #     return JsonResponse({
-        #         'message': 'Server failed to process the request'
-        #     }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
