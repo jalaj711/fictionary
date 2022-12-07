@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from allauth.socialaccount.models import SocialAccount
 import re
-
+import hashlib
 
 # @permission_classes([ AllowAny ])
 # def social_generate_token(request):
@@ -22,18 +22,30 @@ import re
 #         return response
 #     return HttpResponse('Not authenticated', status=status.HTTP_401_UNAUTHORIZED)
 
-@permission_classes([AllowAny])
-def sociallogin_get_token(request):
-    if request.user.is_authenticated:
-        token = AuthToken.objects.create(request.user)[1]
-        res = JsonResponse({
-            'token': token
-        })
 
-        # To make sure that the user can get the token only once per social media login
-        # res.set_cookie('sessionid', '')
-        return res
-    return HttpResponse('Not authenticated', status=status.HTTP_401_UNAUTHORIZED)
+@permission_classes([AllowAny])
+class sociallogin_get_token(generics.GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        data = dict(request.data)
+        if(
+            (data.get("email") and
+             data.get("email_verified") and
+             data.get("family_name") and
+             data.get("given_name") and
+             data.get("name") and
+             data.get("picture"))
+                is None):
+            return HttpResponse('Not authenticated', status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            try:
+                user = User.objects.get(email=data.get("email"))
+            except User.DoesNotExist:
+                user = User.objects.create(email=data.get(
+                    "email"), first_name=data["given_name"], last_name=data["family_name"], picture=data["picture"], username=hashlib.md5(data["email"].encode()).hexdigest())
+            return Response({
+                "success": True,
+                "token": AuthToken.objects.create(user)[1]
+            })
 
 
 @permission_classes([AllowAny])
@@ -49,7 +61,6 @@ def check_game_live(request):
         'game_live': False,
         'date': meta.start_time
     })
-
 
 
 @permission_classes(
@@ -68,9 +79,9 @@ def leaderboard(request):
     board = []
     for user in leaderboard:
         try:
-            social_model = SocialAccount.objects.get(user=user)
-            board.append({'username': user.username, 'name': user.first_name +
-                            ' ' + user.last_name, 'points': user.points, "avatar": social_model.extra_data['picture']})
+            if user.first_name and user.last_name and user.picture:
+                board.append({'username': user.username, 'name': user.first_name +
+                          ' ' + user.last_name, 'points': user.points, "avatar": user.picture})
         except:
             continue
 
@@ -272,4 +283,3 @@ class answer(generics.GenericAPIView):
             return JsonResponse({
                 'message': 'Question not found'
             }, status=status.HTTP_404_NOT_FOUND)
-

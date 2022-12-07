@@ -17,6 +17,7 @@ class User(AbstractUser):
     points = models.IntegerField(default=0)
     time = models.DateTimeField(auto_now_add=True)
     calc_wait_time_from = models.DateTimeField(blank=True, null=True)
+    picture = models.URLField(verbose_name="Avatar of the user: ", default=None, null=True)
 
 class Meta(models.Model):
     start_time = models.DateTimeField()

@@ -37,5 +37,5 @@ urlpatterns = [
         views.checkClueAvailability.as_view())), name='clueAvailability'),
     path('leaderboard/', csrf_exempt(available_when_live(views.leaderboard, check_end=False)), name='leaderboard'),
     path('accounts/get-social-token/',
-         csrf_exempt(views.sociallogin_get_token), name='social_token_generator')
+         csrf_exempt(views.sociallogin_get_token.as_view()), name='social_token_generator')
 ]
