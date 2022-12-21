@@ -61,12 +61,7 @@ class Migration(migrations.Migration):
             name='groups',
             field=models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups'),
         ),
-        migrations.AddField(
-            model_name='user',
-            name='id',
-            field=models.BigAutoField(auto_created=True, default=1, primary_key=True, serialize=False, verbose_name='ID'),
-            preserve_default=False,
-        ),
+        
         migrations.AddField(
             model_name='user',
             name='is_active',
