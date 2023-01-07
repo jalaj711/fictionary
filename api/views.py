@@ -263,6 +263,18 @@ class answer(generics.GenericAPIView):
 
         try:
             question = Question.objects.get(round=cround)
+            if(len(question.answer.split(',')) > 1):
+                if answer in question.answer.split(','):
+                    # Increment points
+                    request.user.current_round = cround + 1
+                    request.user.points += question.points
+                    request.user.time = timezone.now()
+                    request.user.calc_wait_time_from = None
+
+                    request.user.save()
+                    return JsonResponse({
+                        'success': True
+                    })
             if question.answer == answer:
 
                 # Increment points
