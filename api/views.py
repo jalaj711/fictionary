@@ -205,6 +205,11 @@ class clue(generics.GenericAPIView):
         # Make sure that enough time has passed for the user
         diff = timezone.now() - request.user.calc_wait_time_from
         print(timezone.now(), request.user.calc_wait_time_from, diff)
+        if question.clue_wait_time < 0:
+            return JsonResponse({
+                'not-available': True,
+                'success': True
+            })
         if diff > timedelta(minutes=question.clue_wait_time):
             return JsonResponse({
                 'clue': question.clue,
@@ -234,7 +239,11 @@ class checkClueAvailability(generics.GenericAPIView):
 
         # Make sure that enough time has passed for the user
         diff = timezone.now() - request.user.calc_wait_time_from
-        print(timezone.now(), request.user.calc_wait_time_from, diff)
+        if question.clue_wait_time < 0:
+            return JsonResponse({
+                'not-available': True,
+                'success': True
+            })
         if diff > timedelta(minutes=question.clue_wait_time):
             return JsonResponse({
                 'available': True,
