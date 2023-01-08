@@ -15,6 +15,12 @@ def _available_when_live(view_function, check_end, *args, **kwargs):
             return view_function(*args, **kwargs)
         elif now < meta.end_time:
             return view_function(*args, **kwargs)
+        else:
+            return JsonResponse({
+                'game_not_live': True,
+                'message': "The game is not live",
+                'time_up': True
+            }, status=400)
 
     return JsonResponse({
         'game_not_live': True,
