@@ -27,7 +27,7 @@ import hashlib
 class sociallogin_get_token(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         data = dict(request.data)
-        if(
+        if (
             (data.get("email") and
              data.get("email_verified") and
              data.get("family_name") and
@@ -52,11 +52,18 @@ class sociallogin_get_token(generics.GenericAPIView):
 def check_game_live(request):
     meta = Meta.objects.filter()[0]
     now = timezone.now()
-    if now > meta.start_time and now < meta.end_time:
+    if now > meta.start_time:
+        if now < meta.end_time:
+            return JsonResponse({
+                'game_live': True,
+                'date': meta.end_time
+            })
         return JsonResponse({
-            'game_live': True,
+            'time_up': True,
+            'game_live': False,
             'date': meta.end_time
         })
+
     return JsonResponse({
         'game_live': False,
         'date': meta.start_time
@@ -81,7 +88,7 @@ def leaderboard(request):
         try:
             if user.first_name and user.last_name and user.picture:
                 board.append({'username': user.username, 'name': user.first_name +
-                          ' ' + user.last_name, 'points': user.points, "avatar": user.picture})
+                              ' ' + user.last_name, 'points': user.points, "avatar": user.picture})
         except:
             continue
 
@@ -272,7 +279,7 @@ class answer(generics.GenericAPIView):
 
         try:
             question = Question.objects.get(round=cround)
-            if(len(question.answer.split(',')) > 1):
+            if (len(question.answer.split(',')) > 1):
                 if answer in question.answer.split(','):
                     # Increment points
                     request.user.current_round = cround + 1
