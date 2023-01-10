@@ -56,7 +56,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
     'allauth.socialaccount.providers.google',
-    'corsheaders'
+    'corsheaders',
+    'registrations'
 ]
 REST_AUTH_TOKEN_MODEL = None
 LOGIN_REDIRECT_URL = FRONTEND_HOST + '/signin?fetch=true'

@@ -10,7 +10,6 @@ from rest_framework import generics, status
 from knox.models import AuthToken
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from allauth.socialaccount.models import SocialAccount
 import re
 import hashlib
 
