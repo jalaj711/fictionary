@@ -22,6 +22,7 @@ class register(generics.GenericAPIView):
                 name=request.data.get('name'),
                 number=request.data.get('number'),
                 section=request.data.get('section'),
+                hallno=request.data.get('hallno'),
                 roll_no=request.data.get('roll_no'),
             )
             return Response({"success": True})
@@ -44,6 +45,7 @@ class deb_register(generics.GenericAPIView):
                 number=request.data.get('number'),
                 section=request.data.get('section'),
                 roll_no=request.data.get('roll_no'),
+                hallno=request.data.get('hallno'),
                 teamname=request.data.get('teamname')
             )
             return Response({"success": True})

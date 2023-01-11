@@ -7,6 +7,7 @@ class Reverberate(models.Model):
     number = models.CharField(max_length=20, blank=False)
     roll_no = models.CharField(max_length=10, blank=False)
     section = models.CharField(max_length=10, blank=False)
+    hallno = models.CharField(max_length=20, blank=False, default="unknown")
 
 # Create your models here.
 class DebReverberate(models.Model):
@@ -16,3 +17,4 @@ class DebReverberate(models.Model):
     roll_no = models.CharField(max_length=10, blank=False)
     section = models.CharField(max_length=10, blank=False)
     teamname = models.CharField(max_length=10, default="")
+    hallno = models.CharField(max_length=20, blank=False, default="unknown")
